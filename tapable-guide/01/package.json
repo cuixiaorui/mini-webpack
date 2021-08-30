@@ -1,0 +1,17 @@
+{
+  "name": "tapable-guide",
+  "version": "1.0.0",
+  "description": "基于一个 plugin 来理解 tapable 的使用",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "webpack"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "webpack": "^5.51.1",
+    "webpack-cli": "^4.8.0"
+  }
+}
