@@ -1,0 +1,24 @@
+{
+  "name": "mini-webpack",
+  "version": "1.0.0",
+  "description": "",
+  "type": "module",
+  "main": "index.js",
+  "scripts": {
+    "test": "NODE_OPTIONS=--experimental-vm-modules jest"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@babel/generator": "^7.15.0",
+    "@babel/parser": "^7.15.3",
+    "@babel/traverse": "^7.15.0"
+  },
+  "devDependencies": {
+    "@types/jest": "^27.0.1",
+    "babel-core": "^6.26.3",
+    "babel-preset-env": "^1.7.0",
+    "jest": "^27.1.0"
+  }
+}
