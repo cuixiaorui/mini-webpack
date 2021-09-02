@@ -10,6 +10,7 @@ export class Compiler {
 
     this._entry = entry;
     this._output = output;
+    this._config = config;
     this._graph = [];
   }
 
@@ -78,10 +79,25 @@ export class Compiler {
   }
 
   buildModule() {
+    const self = this;
     function _buildModule(filename) {
       // 构建模块
       // 1. 获取模块的代码
-      const sourceCode = fs.readFileSync(filename, { encoding: "utf-8" });
+      let sourceCode = fs.readFileSync(filename, { encoding: "utf-8" });
+      // 需要在这里调用 loader
+      // 把 sourceCode 给到 loader 做处理
+      const rules = self._config.module.rules;
+      rules.forEach(({ loader, test: rule }) => {
+        // 先看看这个 filename 是不是符合这个loader 的
+        if (rule.test(filename)) {
+          // 现在 loader 是个 string ，需要使用 require 加载过来
+          // 暂时就支持一个 loader
+          // TODO loader 的处理是从后往前的，把前一个 loader 返回值给到下一个 loader 内
+          // TODO 需要支持 options
+          sourceCode = loader(sourceCode);
+        }
+      });
+
       // 2. 获取模块的依赖关系和把 import 替换成 require
       const { code, dependencies } = parse(sourceCode);
 
