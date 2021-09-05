@@ -1,0 +1,10 @@
+{
+  "name": "test-enhanced-resolve",
+  "version": "1.0.0",
+  "main": "index.js",
+  "license": "MIT",
+  "dependencies": {
+    "enhanced-resolve": "^5.8.2",
+    "vue": "^3.2.8"
+  }
+}
