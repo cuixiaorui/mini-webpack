@@ -1,8 +1,6 @@
 import fs from "fs";
-import { parse } from "./parser.js";
 import path from "path";
-
-let ID = 0;
+import Compilation from "./Compilation.js";
 
 export class Compiler {
   constructor(config) {
@@ -11,13 +9,20 @@ export class Compiler {
     this._entry = entry;
     this._output = output;
     this._config = config;
+    this._compilation = null;
     this._graph = [];
   }
 
   run() {
     // 1. buildModule
     console.log("run");
-    this.buildModule();
+
+    this._compilation = new Compilation({
+      loaders: this._config.module.rules,
+      entry: this._entry,
+    });
+    this._compilation.make();
+
     this.emitFiles();
   }
 
@@ -36,7 +41,7 @@ export class Compiler {
     // filename 如果是绝对路径的话，那么用户使用的时候可是相对路径的
     // 而如果使用绝对路径的话， 那么就有可能有命名冲突的问题
     // 所以使用 id 来存所有的模块，然后一个模块内有自己的 mapping ，这样的话 就保证了命名不会冲突
-    const modules = this._graph.reduce((r, m) => {
+    const modules = this._compilation.graph.reduce((r, m) => {
       const fn = `
         function (require, module, exports){
           ${m.code}
@@ -76,61 +81,5 @@ export class Compiler {
     // 最后基于 output 生成 bundle 文件即可
     const outputPath = path.join(this._output.path, this._output.filename);
     fs.writeFileSync(outputPath, result);
-  }
-
-  buildModule() {
-    const self = this;
-    function _buildModule(filename) {
-      // 构建模块
-      // 1. 获取模块的代码
-      let sourceCode = fs.readFileSync(filename, { encoding: "utf-8" });
-      // 需要在这里调用 loader
-      // 把 sourceCode 给到 loader 做处理
-      const rules = self._config.module.rules;
-      rules.forEach(({ loader, test: rule }) => {
-        // 先看看这个 filename 是不是符合这个loader 的
-        if (rule.test(filename)) {
-          // 现在 loader 是个 string ，需要使用 require 加载过来
-          // 暂时就支持一个 loader
-          // TODO loader 的处理是从后往前的，把前一个 loader 返回值给到下一个 loader 内
-          // TODO 需要支持 options
-          sourceCode = loader(sourceCode);
-        }
-      });
-
-      // 2. 获取模块的依赖关系和把 import 替换成 require
-      const { code, dependencies } = parse(sourceCode);
-
-      return {
-        code,
-        dependencies,
-        filename,
-        mapping: {},
-        id: ID++,
-      };
-    }
-
-    // 通过队列的方式来把所有的文件都处理掉
-    const moduleQueue = [];
-    const entryModule = _buildModule(this._entry);
-    moduleQueue.push(entryModule);
-    this._graph.push(entryModule);
-
-    while (moduleQueue.length > 0) {
-      const currentModule = moduleQueue.shift();
-      currentModule.dependencies.forEach((dependence) => {
-        // 提前处理下 dependence 的路径
-        // 需要完整的文件路径
-        const childPath = path.resolve(
-          path.dirname(currentModule.filename),
-          dependence
-        );
-        const childModule = _buildModule(childPath);
-        // mapping 的  key  需要是相当路径
-        currentModule.mapping[dependence] = childModule.id;
-        moduleQueue.push(childModule);
-        this._graph.push(childModule);
-      });
-    }
   }
 }
