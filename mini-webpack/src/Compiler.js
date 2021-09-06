@@ -1,6 +1,7 @@
 import fs from "fs";
 import path from "path";
 import Compilation from "./Compilation.js";
+import { AsyncSeriesHook, SyncHook } from "tapable";
 import { createBundleCode } from "./createBundleCode.js";
 
 export class Compiler {
@@ -11,19 +12,36 @@ export class Compiler {
     this._output = output;
     this._config = config;
     this._compilation = null;
+    this._plugins = config.plugins || [];
     this._graph = [];
+
+    this.hooks = {
+      run: new SyncHook(),
+      emit: new AsyncSeriesHook(["compiler"]),
+    };
+
+    this.initPlugins();
+  }
+
+  initPlugins() {
+    // 调用所有的 plugin
+    this._plugins.forEach((plugin) => {
+      plugin.apply?.call(plugin, this);
+    });
   }
 
   run() {
     // 1. buildModule
     console.log("run");
-
+    this.hooks.run.call();
     this._compilation = new Compilation({
-      loaders: this._config.module.rules,
+      loaders: this._config.module?.rules || [],
       entry: this._entry,
     });
     this._compilation.make();
-
+    this.hooks.emit.callAsync(this._compilation, () => {
+      console.log("emit 处理完毕");
+    });
     this.emitFiles();
   }
 

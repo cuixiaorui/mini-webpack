@@ -5,7 +5,7 @@ import fs from "fs";
 let ID = 0;
 export default class Compilation {
   constructor({ loaders, entry }) {
-    this._loaders = loaders;
+    this._loaders = loaders || [];
     this._entry = entry;
     this.graph = [];
   }
