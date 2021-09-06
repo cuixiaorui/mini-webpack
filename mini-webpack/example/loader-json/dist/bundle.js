@@ -34,6 +34,7 @@
     },
     { "./foo.js": 1, "./config.json": 2 },
   ],
+
   1: [
     function (require, module, exports) {
       "use strict";
@@ -49,6 +50,7 @@
     },
     {},
   ],
+
   2: [
     function (require, module, exports) {
       "use strict";
@@ -56,7 +58,6 @@
       Object.defineProperty(exports, "__esModule", {
         value: true,
       });
-
       exports.default = {
         name: "xiaohong",
         age: 19,

@@ -11,7 +11,7 @@
 			"skipFiles": [
 				"<node_internals>/**"
 			],
-			"program": "${workspaceFolder}/lib/bundle.js",
+			"program": "${workspaceFolder}/example/loader-json/index.js",
 			"outFiles": [
 				"${workspaceFolder}/**/*.js"
 			]

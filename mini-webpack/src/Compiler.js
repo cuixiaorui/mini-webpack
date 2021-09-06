@@ -1,6 +1,7 @@
 import fs from "fs";
 import path from "path";
 import Compilation from "./Compilation.js";
+import { createBundleCode } from "./createBundleCode.js";
 
 export class Compiler {
   constructor(config) {
@@ -41,45 +42,36 @@ export class Compiler {
     // filename 如果是绝对路径的话，那么用户使用的时候可是相对路径的
     // 而如果使用绝对路径的话， 那么就有可能有命名冲突的问题
     // 所以使用 id 来存所有的模块，然后一个模块内有自己的 mapping ，这样的话 就保证了命名不会冲突
-    const modules = this._compilation.graph.reduce((r, m) => {
-      const fn = `
-        function (require, module, exports){
-          ${m.code}
-        }
-      `;
+    // const modules = this._compilation.graph.reduce((r, m) => {
+    //   const fn = `
+    //     function (require, module, exports){
+    //       ${m.code}
+    //     }
+    //   `;
 
+    //   // 需要拿到 mapping ，后面需要使用 绝对路径来获取模块的 id
+    //   // r[m.id] = [fn, JSON.stringify(m.mapping)];
+    //   // console.log(m.filename,m.mapping)
+
+    //   r += `${m.id}:[${fn},${JSON.stringify(m.mapping)}],`;
+    //   return r;
+    // }, "");
+
+    const modules = this._compilation.graph.reduce((r, m) => {
       // 需要拿到 mapping ，后面需要使用 绝对路径来获取模块的 id
       // r[m.id] = [fn, JSON.stringify(m.mapping)];
       // console.log(m.filename,m.mapping)
-
-      r += `${m.id}:[${fn},${JSON.stringify(m.mapping)}],`;
+      // r[m.id] = [fn, JSON.stringify(m.mapping)];
+      r[m.id] = {
+        code: m.code,
+        mapping: m.mapping,
+      };
       return r;
-    }, "");
-
-    // 生成 build
-    const result = `
-     (function (modules) {
-          function require(id) {
-
-            const [fn,mapping] = modules[id];
-
-            function localRequire(name){
-              // name -> id
-              return require(mapping[name])
-            }
-
-            const module = { exports: {} };
-            fn(localRequire, module, module.exports);
-            return module.exports;
-          }
-
-
-        require(0);
-     })({${modules}});
-    `;
+    }, {});
 
     // 最后基于 output 生成 bundle 文件即可
     const outputPath = path.join(this._output.path, this._output.filename);
-    fs.writeFileSync(outputPath, result);
+
+    fs.writeFileSync(outputPath, createBundleCode({ modules }));
   }
 }

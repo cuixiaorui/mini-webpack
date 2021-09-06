@@ -1,0 +1,29 @@
+
+     (function (modules) {
+          function require(id) {
+
+            const [fn,mapping] = modules[id];
+
+            function localRequire(name){
+              // name -> id
+              return require(mapping[name])
+            }
+
+            const module = { exports: {} };
+            fn(localRequire, module, module.exports);
+            return module.exports;
+          }
+
+
+        require(0);
+     })({
+	<% Object.keys(modules).forEach(function(id){ %>
+		<%=id%> : [ 
+		   function (require, module, exports){
+			<%-modules[id].code%>
+		   },
+	           <%-JSON.stringify(modules[id].mapping)%>
+		   ],
+	<% }); %>
+	}
+     );
